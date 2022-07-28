@@ -41,6 +41,8 @@ _("jupyter", "server", "extension", "list")
 # initially list installed extensions to determine if there are any surprises
 _("jupyter", "labextension", "list")
 
+# enable the extension
+_("jupyter", "labextension", "enable", "jupyterlab-dagitty")
 
 print("JupyterLab with jupyterlab-dagitty is ready to run with:\n")
 print("\tjupyter lab\n")
