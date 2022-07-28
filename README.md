@@ -1,6 +1,8 @@
 # jupyterlab-dagitty
 
-![Github Actions Status](https://github.com/krassowski/jupyterlab-dagitty/workflows/Build/badge.svg) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/krassowski/jupyterlab-dagitty/master?urlpath=lab/tree/examples/car_model_driver.dag)
+![Github Actions Status](https://github.com/krassowski/jupyterlab-dagitty/workflows/Build/badge.svg)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/krassowski/jupyterlab-dagitty/main?urlpath=lab/tree/examples/car_model_driver.dag)
+[![PyPI version](https://img.shields.io/pypi/v/jupyterlab-dagitty.svg)](https://pypi.org/project/jupyterlab-dagitty/)
 
 A JupyterLab extension for rendering [dagitty](http://dagitty.net/) DAG files (`.dag` or `.dagitty`).
 
