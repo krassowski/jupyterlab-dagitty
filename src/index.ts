@@ -35,6 +35,9 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
 
   private _boundingClientRectOutdated: boolean;
   private _boundingClientRect: DOMRect;
+  private _resizeObserver: ResizeObserver;
+  private _offsetLeft: number;
+  private _offsetTop: number;
 
   /**
    * Construct a new output widget.
@@ -43,8 +46,11 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     super();
     this._mimeType = options.mimeType;
     this.addClass(CLASS_NAME);
-    this._boundingClientRect = this.node.getBoundingClientRect();
-    this._boundingClientRectOutdated = false;
+    this._updatePositions();
+    this._resizeObserver = new ResizeObserver((entries: any) => {
+      this._resize();
+    });
+    this._resizeObserver.observe(this.node);
   }
 
   /**
@@ -52,6 +58,15 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     const data = model.data[this._mimeType] as string;
+    const metadata = model.metadata as any;
+    for (const argument of ['width', 'height']) {
+      const value = metadata[argument] as string | undefined;
+      if (value) {
+        this.node.style.setProperty(argument, value);
+      }
+    }
+    const isMutable = (metadata['mutable'] as boolean | undefined) || false;
+
     const graph = GraphParser.parseGuess(data);
 
     this.dagController = new DAGittyController({
@@ -61,11 +76,27 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
       interactive: true,
       // we set mutable=false to prevent adding new nodes
       // but we still alllow view mutations, see setListeners()
-      mutable: false,
+      mutable: isMutable,
     });
     this.adjustPointerPositioning();
-    this.setListeners();
+    if (!isMutable) {
+      this.setDragListeners();
+    }
+
     return Promise.resolve();
+  }
+
+  private _maybeUpdatePositions() {
+    if (this._boundingClientRectOutdated) {
+      this._updatePositions();
+    }
+  }
+
+  private _updatePositions() {
+    this._boundingClientRect = this.node.getBoundingClientRect();
+    this._offsetLeft = this.node.offsetLeft;
+    this._offsetTop = this.node.offsetTop;
+    this._boundingClientRectOutdated = false;
   }
 
   protected adjustPointerPositioning(): void {
@@ -74,22 +105,19 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     // which is only correct if the container is a direct descendant of body
     // (or nested in elements which do not have paddings/border/position)
     // so here we position getters to return correct values.
+
     const originalPointerX = impl.pointerX;
     impl.pointerX = (e: any) => {
-      return originalPointerX(e) - this.boundingClientRect.x;
+      this._maybeUpdatePositions();
+      return (
+        originalPointerX(e) - this._boundingClientRect.x + this._offsetLeft
+      );
     };
     const originalPointerY = impl.pointerY;
     impl.pointerY = (e: any) => {
-      return originalPointerY(e) - this.boundingClientRect.y;
+      this._maybeUpdatePositions();
+      return originalPointerY(e) - this._boundingClientRect.y + this._offsetTop;
     };
-  }
-
-  get boundingClientRect(): DOMRect {
-    if (this._boundingClientRectOutdated) {
-      this._boundingClientRect = this.node.getBoundingClientRect();
-      this._boundingClientRectOutdated = false;
-    }
-    return this._boundingClientRect;
   }
 
   onUpdateRequest(message: Message): void {
@@ -100,7 +128,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
    * Preserve the information about moved edges in vertices,
    * so that they remain in place when we resize the view.
    */
-  setListeners(): void {
+  setDragListeners(): void {
     const view = this.dagController.getView();
     const impl = view.impl;
 
@@ -126,11 +154,23 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     );
   }
 
-  protected onResize(msg: Widget.ResizeMessage): void {
+  private _resize(): void {
     if (this.dagController) {
       this.dagController.getView().resize();
     }
+  }
+
+  protected onResize(msg: Widget.ResizeMessage): void {
+    this._resize();
     this.update();
+  }
+
+  dispose(): void {
+    if (this._resizeObserver) {
+      this._resizeObserver.unobserve(this.node);
+      this._resizeObserver = null;
+    }
+    super.dispose();
   }
 
   private _mimeType: string;

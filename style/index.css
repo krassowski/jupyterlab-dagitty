@@ -1,0 +1,8 @@
+.jp-OutputArea-output.mimerenderer-dagitty-dag {
+    resize: vertical;
+    overflow: hidden;
+}
+
+.jp-OutputArea-output.mimerenderer-dagitty-dag svg {
+    height: 100%;
+}

@@ -1,5 +1,6 @@
 import json
 import os.path as osp
+from .dag import DAG
 
 from ._version import __version__
 

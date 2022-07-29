@@ -20,7 +20,7 @@
     "strict": true,
     "strictNullChecks": false,
     "target": "es2017",
-    "types": []
+    "types": ["resize-observer-browser"]
   },
   "include": ["src/*"]
 }

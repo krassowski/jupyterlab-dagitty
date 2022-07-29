@@ -52,6 +52,7 @@
     "@jupyterlab/builder": "^3.0.0",
     "@jupyterlab/ui-components": "^3.0.0",
     "@types/react": "^17.0.0",
+    "@types/resize-observer-browser": "^0.1.7",
     "@typescript-eslint/eslint-plugin": "^4.8.1",
     "@typescript-eslint/parser": "^4.8.1",
     "eslint": "^7.14.0",
@@ -68,6 +69,6 @@
   ],
   "jupyterlab": {
     "mimeExtension": true,
-    "outputDir": "jupyterlab-dagitty/labextension"
+    "outputDir": "jupyterlab_dagitty/labextension"
   }
 }

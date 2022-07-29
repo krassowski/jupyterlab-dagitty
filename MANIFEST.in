@@ -6,6 +6,7 @@ include jupyter-config/jupyterlab-dagitty.json
 include package.json
 include install.json
 include ts*.json
+include jupyterlab_dagitty/py.typed
 
 graft jupyterlab-dagitty/labextension
 
