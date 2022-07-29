@@ -15,6 +15,7 @@ import { Widget } from '@lumino/widgets';
 import type { Message } from '@lumino/messaging';
 
 import { DAGittyController, GraphParser } from './_dagitty';
+import type { Graph } from './_dagitty';
 import { dagIcon } from './icons';
 
 /**
@@ -37,6 +38,9 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   private _resizeObserver: ResizeObserver;
   private _offsetLeft: number;
   private _offsetTop: number;
+  private _offsetWidth: number;
+  private _offsetHeight: number;
+  private _inDrag: boolean;
 
   /**
    * Construct a new output widget.
@@ -50,6 +54,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
       this._resize();
     });
     this._resizeObserver.observe(this.node);
+    this._inDrag = false;
   }
 
   /**
@@ -94,6 +99,8 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   private _updatePositions() {
     this._offsetLeft = this.node.offsetLeft;
     this._offsetTop = this.node.offsetTop;
+    this._offsetWidth = this.node.offsetWidth;
+    this._offsetHeight = this.node.offsetHeight;
     this._arePositionsOutdated = false;
   }
 
@@ -163,6 +170,145 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   protected onResize(msg: Widget.ResizeMessage): void {
     this._resize();
     this.update();
+  }
+
+  /**
+   * #### Notes
+   * This method implements the DOM `EventListener` interface and is
+   * called in response to events on the widgets's DOM node.
+   *
+   * This should not be called directly by user code.
+   */
+  handleEvent(event: Event): void {
+    switch (event.type) {
+      case 'wheel':
+        this._evtMouseWheel(event as WheelEvent);
+        event.preventDefault();
+        break;
+      case 'pointerdown':
+        this._evtMouseDown(event as MouseEvent);
+        break;
+      case 'pointermove':
+        this._evtMouseMove(event as MouseEvent);
+        break;
+      case 'pointerup':
+        this._evtMouseUp(event as MouseEvent);
+        break;
+    }
+  }
+
+  private _evtMouseDown(event: MouseEvent): void {
+    this._inDrag = true;
+  }
+
+  private _getBoundingBox(graph: Graph): number[] {
+    let box = graph.getBoundingBox();
+    if (box === null) {
+      const box2 = this.dagController.getView().bounds;
+      box = [box2[0], box2[2], box2[1], box2[3]];
+    }
+    return box;
+  }
+
+  private _evtMouseMove(event: MouseEvent): void {
+    if (!(this._inDrag && event.ctrlKey)) {
+      return;
+    }
+    this._maybeUpdatePositions();
+    const graph = this.dagController.getGraph();
+    const box = this._getBoundingBox(graph);
+    const w = box[2] - box[0];
+    const h = box[3] - box[1];
+    const dx = (event.movementX / this._offsetWidth) * w;
+    const dy = (event.movementY / this._offsetHeight) * h;
+
+    box[0] -= dx;
+    box[1] -= dy;
+    box[2] -= dx;
+    box[3] -= dy;
+
+    graph.setBoundingBox(box);
+    this.dagController.getView().drawGraph();
+    this.update();
+  }
+
+  private _evtMouseUp(event: MouseEvent): void {
+    this._inDrag = false;
+  }
+
+  private _evtMouseWheel(event: WheelEvent): void {
+    if (!(this.dagController && event.ctrlKey)) {
+      return;
+    }
+    const graph = this.dagController.getGraph();
+    let box = this._getBoundingBox(graph);
+    if (box === null) {
+      box = [0, 0, 1, 1];
+    }
+    const scale = 1 + event.deltaY / window.screen.height;
+    this._maybeUpdatePositions();
+    let w = box[2] - box[0];
+    let h = box[3] - box[1];
+
+    const xmin = box[0];
+    const ymin = box[1];
+
+    box[0] -= xmin;
+    box[1] -= ymin;
+    box[2] -= xmin;
+    box[3] -= ymin;
+
+    box[0] -= w / 2;
+    box[1] -= h / 2;
+    box[2] -= w / 2;
+    box[3] -= h / 2;
+
+    box = box.map((x) => x * scale);
+
+    const dx = (event.offsetX / this._offsetWidth) * (1 - scale) * w;
+    const dy = (event.offsetY / this._offsetHeight) * (1 - scale) * h;
+
+    box[0] += dx;
+    box[1] += dy;
+    box[2] += dx;
+    box[3] += dy;
+
+    w = box[2] - box[0];
+    h = box[3] - box[1];
+
+    box[0] += w / 2;
+    box[1] += h / 2;
+    box[2] += w / 2;
+    box[3] += h / 2;
+
+    box[0] += xmin;
+    box[1] += ymin;
+    box[2] += xmin;
+    box[3] += ymin;
+
+    graph.setBoundingBox(box);
+    this.dagController.getView().drawGraph();
+    this.update();
+  }
+
+  /**
+   * A message handler invoked on a `'before-attach'` message.
+   */
+  protected onBeforeAttach(msg: Message): void {
+    this.node.addEventListener('pointerdown', this);
+    this.node.addEventListener('pointerup', this);
+    this.node.addEventListener('pointermove', this);
+    this.node.addEventListener('wheel', this);
+  }
+
+  /**
+   * A message handler invoked on an `'after-detach'` message.
+   */
+  protected onAfterDetach(msg: Message): void {
+    this.node.removeEventListener('pointerdown', this);
+    this.node.removeEventListener('pointerup', this);
+    this.node.removeEventListener('pointermove', this);
+    this.node.removeEventListener('wheel', this);
   }
 
   dispose(): void {
