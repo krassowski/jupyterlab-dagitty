@@ -75,7 +75,7 @@ try:
         npm_builder,
         get_data_files
     )
-    builder = npm_builder(HERE, build_cmd="build", npm=["jlpm"])
+    builder = npm_builder(HERE, build_cmd="build:prod", npm=["jlpm"])
     cmdclass = wrap_installers(pre_develop=builder, ensured_targets=ensured_targets)
 
     setup_args['cmdclass'] = cmdclass
