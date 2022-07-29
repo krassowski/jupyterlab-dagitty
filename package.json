@@ -1,11 +1,13 @@
 {
   "name": "jupyterlab-dagitty",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A JupyterLab extension for rendering Dagitty DAG files.",
   "keywords": [
     "jupyter",
     "jupyterlab",
-    "jupyterlab-extension"
+    "jupyterlab-extension",
+    "causal-inference",
+    "dag"
   ],
   "homepage": "https://github.com/krassowski/jupyterlab-dagitty",
   "bugs": {
