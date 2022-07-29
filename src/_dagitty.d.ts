@@ -6,8 +6,8 @@ type DagEvent = 'graphchange' | 'graphlayoutchange' | 'vertex_marked' | 'vertex_
 
 export class GraphGUI_SVG {
     setEventListener(event: DagEvent, callback: any): void;
-    pointerX(e: any): number;
-    pointerY(e: any): number;
+    pointerX(e: MouseEvent): number;
+    pointerY(e: MouseEvent): number;
 }
 
 export class DAGittyGraphView {
@@ -16,6 +16,8 @@ export class DAGittyGraphView {
     toGraphCoordinate(x: number, y: number): any;
     getViewMode(): string;
     getGraph(): Graph;
+    pointerX(e: MouseEvent): number;
+    pointerY(e: MouseEvent): number;
 }
 
 export class DAGittyController {

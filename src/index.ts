@@ -33,8 +33,7 @@ const CLASS_NAME = 'mimerenderer-dagitty-dag';
 export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   dagController?: DAGittyController;
 
-  private _boundingClientRectOutdated: boolean;
-  private _boundingClientRect: DOMRect;
+  private _arePositionsOutdated: boolean;
   private _resizeObserver: ResizeObserver;
   private _offsetLeft: number;
   private _offsetTop: number;
@@ -87,41 +86,42 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   }
 
   private _maybeUpdatePositions() {
-    if (this._boundingClientRectOutdated) {
+    if (this._arePositionsOutdated) {
       this._updatePositions();
     }
   }
 
   private _updatePositions() {
-    this._boundingClientRect = this.node.getBoundingClientRect();
     this._offsetLeft = this.node.offsetLeft;
     this._offsetTop = this.node.offsetTop;
-    this._boundingClientRectOutdated = false;
+    this._arePositionsOutdated = false;
   }
 
   protected adjustPointerPositioning(): void {
-    const impl = this.dagController.getView().impl;
+    const view = this.dagController.getView();
+    const impl = view.impl;
     // dagitty uses offsetLeft and offsetTop to calculate mouse position,
     // which is only correct if the container is a direct descendant of body
     // (or nested in elements which do not have paddings/border/position)
-    // so here we position getters to return correct values.
+    // so here we override position getters to return correct values.
 
-    const originalPointerX = impl.pointerX;
-    impl.pointerX = (e: any) => {
+    const offsetX = (e: MouseEvent) => {
       this._maybeUpdatePositions();
-      return (
-        originalPointerX(e) - this._boundingClientRect.x + this._offsetLeft
-      );
+      return e.offsetX + this._offsetLeft;
     };
-    const originalPointerY = impl.pointerY;
-    impl.pointerY = (e: any) => {
+    const offsetY = (e: MouseEvent) => {
       this._maybeUpdatePositions();
-      return originalPointerY(e) - this._boundingClientRect.y + this._offsetTop;
+      return e.offsetY + this._offsetTop;
     };
+    view.pointerX = offsetX;
+    view.pointerY = offsetY;
+
+    impl.pointerX = offsetX;
+    impl.pointerY = offsetY;
   }
 
   onUpdateRequest(message: Message): void {
-    this._boundingClientRectOutdated = true;
+    this._arePositionsOutdated = true;
   }
 
   /**
