@@ -191,6 +191,9 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
       case 'pointermove':
         this._evtMouseMove(event as MouseEvent);
         break;
+      case 'pointerleave':
+        this._evtMouseLeave(event as MouseEvent);
+        break;
       case 'pointerup':
         this._evtMouseUp(event as MouseEvent);
         break;
@@ -233,6 +236,10 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   }
 
   private _evtMouseUp(event: MouseEvent): void {
+    this._inDrag = false;
+  }
+
+  private _evtMouseLeave(event: MouseEvent): void {
     this._inDrag = false;
   }
 
@@ -298,6 +305,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     this.node.addEventListener('pointerdown', this);
     this.node.addEventListener('pointerup', this);
     this.node.addEventListener('pointermove', this);
+    this.node.addEventListener('pointerleave', this);
     this.node.addEventListener('wheel', this);
   }
 
@@ -308,6 +316,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     this.node.removeEventListener('pointerdown', this);
     this.node.removeEventListener('pointerup', this);
     this.node.removeEventListener('pointermove', this);
+    this.node.removeEventListener('pointerleave', this);
     this.node.removeEventListener('wheel', this);
   }
 
