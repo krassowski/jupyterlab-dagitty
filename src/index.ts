@@ -184,7 +184,6 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     switch (event.type) {
       case 'wheel':
         this._evtMouseWheel(event as WheelEvent);
-        event.preventDefault();
         break;
       case 'pointerdown':
         this._evtMouseDown(event as MouseEvent);
@@ -294,6 +293,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     graph.setBoundingBox(box);
     this.dagController.getView().drawGraph();
     this.update();
+    event.preventDefault();
   }
 
   /**
