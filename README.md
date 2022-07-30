@@ -4,11 +4,21 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/krassowski/jupyterlab-dagitty/main?urlpath=lab/tree/examples/car_model_driver.dag)
 [![PyPI version](https://img.shields.io/pypi/v/jupyterlab-dagitty.svg)](https://pypi.org/project/jupyterlab-dagitty/)
 
-A JupyterLab extension for rendering [dagitty](http://dagitty.net/) DAG files (`.dag` or `.dagitty`).
+A JupyterLab extension for rendering [dagitty](http://dagitty.net/) DAG files (`.dag` or `.dagitty`),
+[Python](https://mybinder.org/v2/gh/krassowski/jupyterlab-dagitty/main?urlpath=lab/tree/examples/Python_demo.ipynb) and
+[R](https://mybinder.org/v2/gh/krassowski/jupyterlab-dagitty/main?urlpath=lab/tree/examples/R_demo.ipynb)
+notebooks. This extension will also work with upcoming Jupyter Notebook v7+.
 
 ![Screenshot of rendered DAG][screenshot]
 
 [screenshot]: https://raw.githubusercontent.com/krassowski/jupyterlab-dagitty/main/docs/images/screenshot.png
+
+In addition to built-in `dagitty` interactions (moving nodes and edges), you can use:
+- <kbd>Ctrl</kbd> + mouse wheel to zoom in/out,
+- <kbd>Ctrl</kbd> + mouse click and drag to move the canvas,
+- resize the plot by dragging bottom-right corner.
+
+You can also make the plot mutable to add nodes or edges (although changes will not be saved).
 
 ## Requirements
 
