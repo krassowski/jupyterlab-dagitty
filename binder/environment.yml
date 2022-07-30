@@ -16,4 +16,4 @@ dependencies:
   - pip
   - wheel
   - pip:
-    - jupyterlab-dagitty>=0.3.3
+    - jupyterlab-dagitty>=0.3.4

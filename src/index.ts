@@ -162,6 +162,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   }
 
   private _resize(): void {
+    this._arePositionsOutdated = true;
     if (this.dagController) {
       this.dagController.getView().resize();
     }
@@ -249,9 +250,6 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     }
     const graph = this.dagController.getGraph();
     let box = this._getBoundingBox(graph);
-    if (box === null) {
-      box = [0, 0, 1, 1];
-    }
     const scale = 1 + event.deltaY / window.screen.height;
     this._maybeUpdatePositions();
     let w = box[2] - box[0];
