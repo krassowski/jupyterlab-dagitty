@@ -2,31 +2,39 @@
 jupyterlab-dagitty setup
 """
 import json
-import os
+from pathlib import Path
 
 import setuptools
 
-HERE = os.path.abspath(os.path.dirname(__file__))
+HERE = Path(__file__).parent.resolve()
+
 
 # The name of the project
 name = "jupyterlab-dagitty"
 
-# Get our version
-with open(os.path.join(HERE, 'package.json')) as f:
-    version = json.load(f)['version']
+# Get the package info from package.json
+pkg_json = json.loads((HERE / "package.json").read_bytes())
 
-lab_path = os.path.join(HERE, name.replace('-', '_'), "labextension")
+version = (
+    pkg_json["version"]
+    .replace("-alpha.", "a")
+    .replace("-beta.", "b")
+    .replace("-rc.", "rc")
+)
+
+lab_path = (HERE / pkg_json["jupyterlab"]["outputDir"])
 
 # Representative files that should exist after a successful build
 ensured_targets = [
-    os.path.join(lab_path, "package.json"),
+    str(lab_path / "package.json"),
+    str(lab_path / "static/style.js")
 ]
 
 labext_name = "jupyterlab-dagitty"
 
 data_files_spec = [
-    ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
-    ("share/jupyter/labextensions/%s" % labext_name, HERE, "install.json"),
+    ("share/jupyter/labextensions/%s" % labext_name, str(lab_path.relative_to(HERE)), "**"),
+    ("share/jupyter/labextensions/%s" % labext_name, '.', "install.json"),
 ]
 
 with open("README.md", "r") as fh:
@@ -75,14 +83,17 @@ try:
         npm_builder,
         get_data_files
     )
-    builder = npm_builder(HERE, build_cmd="build:prod", npm=["jlpm"])
-    cmdclass = wrap_installers(pre_develop=builder, ensured_targets=ensured_targets)
-
-    setup_args['cmdclass'] = cmdclass
-    setup_args['data_files'] = get_data_files(data_files_spec)
-except ImportError:
-    pass
-
+    post_develop = npm_builder(
+        build_cmd="install:extension", source_dir="src", build_dir=lab_path
+    )
+    setup_args["cmdclass"] = wrap_installers(post_develop=post_develop, ensured_targets=ensured_targets)
+    setup_args["data_files"] = get_data_files(data_files_spec)
+except ImportError as e:
+    import logging
+    logging.basicConfig(format="%(levelname)s: %(message)s")
+    logging.warning("Build tool `jupyter-packaging` is missing. Install it with pip or conda.")
+    if not ("--name" in sys.argv or "--version" in sys.argv):
+        raise e
 
 if __name__ == "__main__":
     setuptools.setup(**setup_args)

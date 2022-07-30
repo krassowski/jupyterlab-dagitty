@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-dagitty",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A JupyterLab extension for rendering Dagitty DAG files.",
   "keywords": [
     "jupyter",
