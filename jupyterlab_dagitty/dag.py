@@ -17,7 +17,7 @@ class DAG:
             if not isinstance(path, Path):
                 path = Path(path)
             if data is not None:
-                raise ValueError(f'Please provide either `data` or `path`, not both.')
+                raise ValueError('Please provide either `data` or `path`, not both.')
             data = path.read_text()
         self.data = data
         self.height = height
