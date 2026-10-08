@@ -29,6 +29,60 @@ const MIME_TYPE = 'application/x.dagitty.dag';
 const CLASS_NAME = 'mimerenderer-dagitty-dag';
 
 /**
+ * The events of the widget's node that `OutputWidget.handleEvent` handles.
+ */
+const EVENT_TYPES = [
+  'keydown',
+  'pointerdown',
+  'pointermove',
+  'pointerup',
+  'pointerleave',
+  'wheel',
+];
+
+/**
+ * The room that a node takes around its centre, in px: dagitty draws the
+ * node's shape about 20 px across its centre, and its name centred 35 px
+ * below it.
+ */
+const NODE_RADIUS = 20;
+const NAME_BASELINE = 35;
+const NAME_DESCENT = 5;
+const MARGIN = 6;
+
+/**
+ * Widen the view's bounds, in the graph's units, until every node's name fits
+ * inside the drawing: a name at an edge was cut when `bb` left too little
+ * margin for it. The view maps its bounds onto its width and height, so a
+ * wider bound draws everything a little smaller.
+ */
+export function fitNames(
+  bounds: number[],
+  width: number,
+  height: number,
+  nodes: { x: number; y: number; name: number }[]
+): number[] {
+  if (width <= 2 * MARGIN || height <= 2 * MARGIN || !nodes.length) {
+    return bounds;
+  }
+  let [x0, x1, y0, y1] = bounds;
+  // Each pass widens the bounds by what the scale of the pass before needs:
+  // a few passes settle it to a fraction of a pixel.
+  for (let pass = 0; pass < 6; pass++) {
+    const sx = (x1 - x0) / width;
+    const sy = (y1 - y0) / height;
+    for (const node of nodes) {
+      const half = Math.max(node.name / 2, NODE_RADIUS) + MARGIN;
+      x0 = Math.min(x0, node.x - half * sx);
+      x1 = Math.max(x1, node.x + half * sx);
+      y0 = Math.min(y0, node.y - (NODE_RADIUS + MARGIN) * sy);
+      y1 = Math.max(y1, node.y + (NAME_BASELINE + NAME_DESCENT + MARGIN) * sy);
+    }
+  }
+  return [x0, x1, y0, y1];
+}
+
+/**
  * A widget for rendering Dagitty DAG.
  */
 export class OutputWidget extends Widget implements IRenderMime.IRenderer {
@@ -55,6 +109,12 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     });
     this._resizeObserver.observe(this.node);
     this._inDrag = false;
+    // A JupyterLab 4 notebook sends `after-attach` to the widgets of an output
+    // without a `before-attach` before it. The listeners are added here, once,
+    // to the node that this widget owns, and removed in `dispose()`.
+    for (const type of EVENT_TYPES) {
+      this.node.addEventListener(type, this);
+    }
   }
 
   /**
@@ -83,6 +143,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
       mutable: isMutable,
     });
     this.adjustPointerPositioning();
+    this.fitNamesOnDraw();
     if (!isMutable) {
       this.setDragListeners();
     }
@@ -102,6 +163,40 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     this._offsetWidth = this.node.offsetWidth;
     this._offsetHeight = this.node.offsetHeight;
     this._arePositionsOutdated = false;
+  }
+
+  /**
+   * Make the view widen its bounds to fit the nodes' names each time it sets
+   * them, and draw again. A resize while the output is hidden does not draw:
+   * at a width of 0 the view drew at -4 px, and the browser logged an error.
+   * The first drawing, before the output is attached, still logs one.
+   */
+  protected fitNamesOnDraw(): void {
+    const view = this.dagController.getView();
+    const node = this.node;
+    const initialize = view.initializeCoordinateSystem;
+    const context = document.createElement('canvas').getContext('2d');
+    view.initializeCoordinateSystem = function (graph: any) {
+      initialize.call(this, graph);
+      const text = node.querySelector('svg text.nodelabel');
+      if (context) {
+        context.font = getComputedStyle(text ?? node).font;
+      }
+      const nodes = graph.getVertices().map((vertex: any) => ({
+        x: vertex.layout_pos_x,
+        y: vertex.layout_pos_y,
+        name: context ? context.measureText(String(vertex.id)).width : 0,
+      }));
+      this.bounds = fitNames(this.bounds, this.width, this.height, nodes);
+    };
+    const resize = view.resize;
+    view.resize = function () {
+      if (this.getContainer().offsetWidth > 4) {
+        resize.call(this);
+      }
+    };
+    view.setCoordinateSystemValid(false);
+    view.drawGraph();
   }
 
   protected adjustPointerPositioning(): void {
@@ -182,6 +277,9 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
    */
   handleEvent(event: Event): void {
     switch (event.type) {
+      case 'keydown':
+        this._evtKeyDown(event as KeyboardEvent);
+        break;
       case 'wheel':
         this._evtMouseWheel(event as WheelEvent);
         break;
@@ -198,6 +296,26 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
         this._evtMouseUp(event as MouseEvent);
         break;
     }
+  }
+
+  /**
+   * dagitty asks for the name of a new or renamed variable in a form. Since
+   * JupyterLab 4.2, the application cancels the line break that Enter makes
+   * in any input inside a cell, and the browser then does not submit the form
+   * on Enter. Submit the form here instead.
+   */
+  private _evtKeyDown(event: KeyboardEvent): void {
+    const target = event.target;
+    if (
+      event.key !== 'Enter' ||
+      event.isComposing ||
+      !(target instanceof HTMLInputElement) ||
+      !target.form
+    ) {
+      return;
+    }
+    event.preventDefault();
+    target.form.requestSubmit();
   }
 
   private _evtMouseDown(event: MouseEvent): void {
@@ -296,32 +414,13 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     event.preventDefault();
   }
 
-  /**
-   * A message handler invoked on a `'before-attach'` message.
-   */
-  protected onBeforeAttach(msg: Message): void {
-    this.node.addEventListener('pointerdown', this);
-    this.node.addEventListener('pointerup', this);
-    this.node.addEventListener('pointermove', this);
-    this.node.addEventListener('pointerleave', this);
-    this.node.addEventListener('wheel', this);
-  }
-
-  /**
-   * A message handler invoked on an `'after-detach'` message.
-   */
-  protected onAfterDetach(msg: Message): void {
-    this.node.removeEventListener('pointerdown', this);
-    this.node.removeEventListener('pointerup', this);
-    this.node.removeEventListener('pointermove', this);
-    this.node.removeEventListener('pointerleave', this);
-    this.node.removeEventListener('wheel', this);
-  }
-
   dispose(): void {
     if (this._resizeObserver) {
       this._resizeObserver.unobserve(this.node);
       this._resizeObserver = null;
+    }
+    for (const type of EVENT_TYPES) {
+      this.node.removeEventListener(type, this);
     }
     super.dispose();
   }

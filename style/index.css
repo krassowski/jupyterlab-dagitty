@@ -1,8 +1,20 @@
 .jp-OutputArea-output.mimerenderer-dagitty-dag {
-    resize: vertical;
-    overflow: hidden;
+  resize: vertical;
+  overflow: hidden;
 }
 
 .jp-OutputArea-output.mimerenderer-dagitty-dag svg {
-    height: 100%;
+  height: 100%;
+}
+
+/*
+ * A width that the output asks for, such as DAG(width=950), shrinks to the
+ * width of its container: wider, it cut off the nodes on the right, such as
+ * the outcome. The renderer's ResizeObserver then draws the diagram again to
+ * fit. Without the class of JupyterLab's output area, so that it also holds
+ * where another view, such as Whybook's, renders the output.
+ */
+.mimerenderer-dagitty-dag {
+  max-width: 100%;
+  box-sizing: border-box;
 }

@@ -2,3 +2,8 @@ node_modules
 **/node_modules
 **/lib
 **/package.json
+jupyterlab_dagitty
+src/_dagitty.js
+eslint.config.mjs
+.venv
+src/_dagitty.d.ts
