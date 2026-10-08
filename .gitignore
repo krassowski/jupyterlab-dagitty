@@ -14,6 +14,10 @@ jupyterlab_dagitty/_version.py
 # Written by build_dagitty.sh from the pinned dagitty sources
 src/_dagitty.js
 
+# Integration tests
+ui-tests/test-results/
+ui-tests/playwright-report/
+
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
 
