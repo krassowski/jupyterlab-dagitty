@@ -53,7 +53,7 @@ bash build_dagitty.sh
 # Install package in development mode
 pip install -e .
 # Link your development version of the extension with JupyterLab
-jupyter labextension develop . --overwrite
+jupyter-builder develop . --overwrite
 # Rebuild extension Typescript source after making changes
 # IMPORTANT: Unlike the steps above which are performed only once, do this step
 # every time you make a change.
@@ -83,6 +83,6 @@ jupyter lab build --minimize=False
 pip uninstall jupyterlab-dagitty
 ```
 
-In development mode, you will also need to remove the symlink created by the `jupyter labextension develop` command.
+In development mode, you will also need to remove the symlink created by the `jupyter-builder develop` command.
 To find its location, you can run `jupyter labextension list` to figure out where the `labextensions` folder is located.
 Then you can remove the symlink named `jupyterlab-dagitty` within that folder.
