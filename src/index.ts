@@ -37,7 +37,7 @@ const EVENT_TYPES = [
   'pointermove',
   'pointerup',
   'pointerleave',
-  'wheel',
+  'wheel'
 ];
 
 /**
@@ -140,7 +140,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
       interactive: true,
       // we set mutable=false to prevent adding new nodes
       // but we still alllow view mutations, see setListeners()
-      mutable: isMutable,
+      mutable: isMutable
     });
     this.adjustPointerPositioning();
     this.fitNamesOnDraw();
@@ -185,7 +185,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
       const nodes = graph.getVertices().map((vertex: any) => ({
         x: vertex.layout_pos_x,
         y: vertex.layout_pos_y,
-        name: context ? context.measureText(String(vertex.id)).width : 0,
+        name: context ? context.measureText(String(vertex.id)).width : 0
       }));
       this.bounds = fitNames(this.bounds, this.width, this.height, nodes);
     };
@@ -385,7 +385,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     box[2] -= w / 2;
     box[3] -= h / 2;
 
-    box = box.map((x) => x * scale);
+    box = box.map(x => x * scale);
 
     const dx = (event.offsetX / this._offsetWidth) * (1 - scale) * w;
     const dy = (event.offsetY / this._offsetHeight) * (1 - scale) * h;
@@ -434,7 +434,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
 export const rendererFactory: IRenderMime.IRendererFactory = {
   safe: true,
   mimeTypes: [MIME_TYPE],
-  createRenderer: (options) => new OutputWidget(options),
+  createRenderer: options => new OutputWidget(options)
 };
 
 /**
@@ -450,21 +450,21 @@ const extension: IRenderMime.IExtension = {
       name: 'dag',
       mimeTypes: [MIME_TYPE],
       extensions: ['.dag'],
-      icon: dagIcon.name,
+      icon: dagIcon.name
     },
     {
       name: 'dagitty',
       mimeTypes: [MIME_TYPE],
       extensions: ['.dagitty'],
-      icon: dagIcon.name,
-    },
+      icon: dagIcon.name
+    }
   ],
   documentWidgetFactoryOptions: {
     name: 'Dagitty DAG',
     primaryFileType: 'dag',
     fileTypes: ['dag'],
-    defaultFor: ['dag'],
-  },
+    defaultFor: ['dag']
+  }
 };
 
 export default extension;
