@@ -127,6 +127,11 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
         this.node.style.setProperty(argument, value);
       }
     }
+    if (metadata['width']) {
+      // Only when width is explicit: an unconditional max-width:100% gets
+      // clamped stale by Lumino's document layout, squashing .dag views.
+      this.node.style.setProperty('max-width', '100%');
+    }
     const isMutable = (metadata['mutable'] as boolean | undefined) || false;
 
     const graph = GraphParser.parseGuess(data);

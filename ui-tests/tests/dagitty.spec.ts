@@ -1,4 +1,6 @@
 import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const DAG_SOURCE = `dag {
 "exposure" [exposure,pos="0,0"]
@@ -49,6 +51,28 @@ test('renders a .dag file opened from the file browser', async ({
   await expect(
     view.locator('text.nodelabel', { hasText: 'outcome' })
   ).toBeVisible();
+});
+
+test('fills the available width for a .dag file opened as a document', async ({
+  page,
+  tmpPath
+}) => {
+  // Regression: a document view, unlike a notebook output, is positioned by
+  // Lumino's StackedLayout, which once cached max-width:100% from an early,
+  // too-narrow measurement and never widened it again (squashed to a strip).
+  const source = fs.readFileSync(
+    path.resolve(__dirname, '../../examples/car_model_driver.dag'),
+    'utf-8'
+  );
+  const filename = 'car_model_driver.dag';
+  await page.contents.uploadContent(source, 'text', `${tmpPath}/${filename}`);
+  await page.filebrowser.open(`${tmpPath}/${filename}`);
+
+  const view = page.locator('.mimerenderer-dagitty-dag');
+  await expect(view.locator('text.nodelabel').first()).toBeVisible();
+  const box = await view.boundingBox();
+  expect(box!.width).toBeGreaterThan(400);
+  await expect(view).toHaveScreenshot('car-model-driver.png');
 });
 
 test('submits the rename dialog on Enter in a mutable notebook output', async ({
