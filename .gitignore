@@ -1,15 +1,30 @@
 *.bundle.*
 lib/
 node_modules/
+*.log
+.eslintcache
+.stylelintcache
 *.egg-info/
 .ipynb_checkpoints
 *.tsbuildinfo
 jupyterlab_dagitty/labextension
+# Version file is handled by hatchling
+jupyterlab_dagitty/_version.py
+
+# Written by build_dagitty.sh from the pinned dagitty sources
+src/_dagitty.js
+
+# Integration tests
+ui-tests/test-results/
+ui-tests/playwright-report/
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
 
 ### Python ###
+# Virtual environments
+.venv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -107,3 +122,9 @@ dmypy.json
 .pyre/
 
 # End of https://www.gitignore.io/api/python
+
+# OSX files
+.DS_Store
+
+# Yarn cache
+.yarn/

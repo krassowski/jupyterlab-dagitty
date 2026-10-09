@@ -1,17 +1,84 @@
 [build-system]
-requires = ["jupyter_packaging~=0.10,<2", "jupyterlab~=3.0"]
-build-backend = "jupyter_packaging.build_api"
+requires = ["hatchling>=1.27.0", "hatch-nodejs-version>=0.3.2", "jupyter-builder>=1.2.0,<2"]
+build-backend = "hatchling.build"
 
-[tool.jupyter-packaging.options]
-skip-if-exists = ["jupyterlab_dagitty/labextension/package.json"]
-ensured-targets = ["jupyterlab_dagitty/labextension/package.json"]
+[project]
+name = "jupyterlab-dagitty"
+readme = "README.md"
+license = "LGPL-2.1-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+classifiers = [
+    "Framework :: Jupyter",
+    "Framework :: Jupyter :: JupyterLab",
+    "Framework :: Jupyter :: JupyterLab :: 4",
+    "Framework :: Jupyter :: JupyterLab :: Extensions",
+    "Framework :: Jupyter :: JupyterLab :: Extensions :: Mime Renderers",
+    "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+]
+dynamic = ["version", "description", "authors", "urls", "keywords"]
 
-[tool.jupyter-packaging.builder]
-factory = "jupyter_packaging.npm_builder"
+[project.optional-dependencies]
+dev = [
+    "jupyterlab>=4.0.0,<5",
+    "jupyter-builder>=1.2.0",
+]
 
-[tool.jupyter-packaging.build-args]
+[tool.hatch.version]
+source = "nodejs"
+
+[tool.hatch.metadata.hooks.nodejs]
+fields = ["description", "authors", "urls", "keywords"]
+
+[tool.hatch.build.targets.sdist]
+artifacts = ["jupyterlab_dagitty/labextension"]
+exclude = [".github", "binder"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"jupyterlab_dagitty/labextension" = "share/jupyter/labextensions/jupyterlab-dagitty"
+"install.json" = "share/jupyter/labextensions/jupyterlab-dagitty/install.json"
+
+[tool.hatch.build.hooks.version]
+path = "jupyterlab_dagitty/_version.py"
+
+[tool.hatch.build.hooks.jupyter-builder]
+dependencies = ["hatch-jupyter-builder>=0.5"]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = [
+    "jupyterlab_dagitty/labextension/static/style.js",
+    "jupyterlab_dagitty/labextension/package.json",
+]
+skip-if-exists = ["jupyterlab_dagitty/labextension/static/style.js"]
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
 npm = ["jlpm"]
 
-[tool.check-manifest]
-ignore = ["jupyterlab_dagitty/labextension/**", "yarn.lock", ".*", "package-lock.json"]
+[tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
+build_cmd = "install:extension"
+npm = ["jlpm"]
+source_dir = "src"
+build_dir = "jupyterlab_dagitty/labextension"
+
+[tool.jupyter-releaser.options]
+version_cmd = "hatch version"
+
+[tool.jupyter-releaser.hooks]
+before-build-npm = [
+    "python -m pip install 'jupyter-builder>=1.2.0,<2'",
+    "jlpm",
+    "jlpm build:prod"
+]
+before-build-python = ["jlpm clean:all"]
+
+[tool.check-wheel-contents]
+ignore = ["W002"]

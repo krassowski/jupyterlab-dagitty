@@ -18,8 +18,6 @@ type DagEvent = 'graphchange' | 'graphlayoutchange' | 'vertex_marked' | 'vertex_
 
 export class GraphGUI_SVG {
     setEventListener(event: DagEvent, callback: any): void;
-    pointerX(e: MouseEvent): number;
-    pointerY(e: MouseEvent): number;
 }
 
 export class DAGittyGraphView {
@@ -29,9 +27,14 @@ export class DAGittyGraphView {
     toGraphCoordinate(x: number, y: number): any;
     getViewMode(): string;
     getGraph(): Graph;
-    pointerX(e: MouseEvent): number;
-    pointerY(e: MouseEvent): number;
     bounds: BoundingBox2
+    /** The drawing's size in px: the container's, less 4. */
+    width: number;
+    height: number;
+    getContainer(): HTMLElement;
+    /** Set `bounds` from the graph's `bb`, or from its nodes when it has none. */
+    initializeCoordinateSystem(graph: Graph): void;
+    setCoordinateSystemValid(valid: boolean): void;
 }
 
 export class DAGittyController {

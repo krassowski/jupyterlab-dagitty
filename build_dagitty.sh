@@ -2,7 +2,9 @@
 set -e
 
 OUT_FILE='src/_dagitty.js'
-COMMIT="ca4ec745ccfeaf8d283543c978e3691178748279"
+# frontdoor branch: master lost jtextor/dagitty#64 (offsetX/offsetY fix)
+# in an unrelated history rewrite; frontdoor still has it.
+COMMIT="acfc5db2ce474ebb6d957c0d0f9f921a7b74fe98"
 
 echo 'var _ = require("underscore");' > "${OUT_FILE}"
 
