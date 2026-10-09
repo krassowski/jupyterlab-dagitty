@@ -2,7 +2,13 @@
 set -e
 
 OUT_FILE='src/_dagitty.js'
-COMMIT="ca4ec745ccfeaf8d283543c978e3691178748279"
+# On the `frontdoor` branch, not `master`: master's history for jslib/gui
+# dropped the mid-2023 merge of jtextor/dagitty#64 (offsetX/offsetY pointer
+# positions, needed to embed dagitty in a scrollable or positioned element)
+# during an unrelated "webserver migration". frontdoor still has it, and
+# nothing on master has touched jslib/graph, jslib/parser or jslib/gui since
+# frontdoor's last commit except one unrelated 4-line simplification.
+COMMIT="acfc5db2ce474ebb6d957c0d0f9f921a7b74fe98"
 
 echo 'var _ = require("underscore");' > "${OUT_FILE}"
 

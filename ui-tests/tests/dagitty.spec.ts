@@ -142,3 +142,41 @@ test('zooms in on Ctrl+wheel', async ({ page }) => {
 
   await expect(view).toHaveScreenshot('zoomed-in.png');
 });
+
+test('dragging a vertex tracks the pointer', async ({ page }) => {
+  // Dagitty positions the drag from the native MouseEvent.offsetX/offsetY
+  // (jtextor/dagitty#64, pulled in via build_dagitty.sh), which is only
+  // correct once the container is accounted for the way that commit does
+  // it: this is the one interaction that commit was written for, so check
+  // it directly rather than trust the upstream fix blindly.
+  const source = `dag {
+"a" [pos="0,0"]
+"b" [pos="1,1"]
+}`;
+  const view = await renderInNotebook(page, source, {
+    mutable: true,
+    height: 300
+  });
+
+  const nodeCenter = async (name: string) =>
+    view.evaluate((div, n) => {
+      const label = Array.from(div.querySelectorAll('svg text.nodelabel')).find(
+        el => el.textContent === n
+      )!;
+      const box = label.closest('g')!.getBoundingClientRect();
+      return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    }, name);
+
+  const before = await nodeCenter('a');
+  const [dx, dy] = [80, 40];
+  await page.mouse.move(before.x, before.y);
+  await page.mouse.down();
+  await page.mouse.move(before.x + dx, before.y + dy, { steps: 10 });
+  await page.mouse.up();
+
+  const after = await nodeCenter('a');
+  // A loose tolerance: this checks the node follows the pointer by roughly
+  // the dragged distance, not that the drag is pixel-exact.
+  expect(after.x - before.x).toBeGreaterThan(dx * 0.5);
+  expect(after.y - before.y).toBeGreaterThan(dy * 0.5);
+});

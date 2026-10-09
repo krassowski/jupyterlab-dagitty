@@ -90,8 +90,6 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
 
   private _arePositionsOutdated: boolean;
   private _resizeObserver: ResizeObserver;
-  private _offsetLeft: number;
-  private _offsetTop: number;
   private _offsetWidth: number;
   private _offsetHeight: number;
   private _inDrag: boolean;
@@ -142,7 +140,6 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
       // but we still alllow view mutations, see setListeners()
       mutable: isMutable
     });
-    this.adjustPointerPositioning();
     this.fitNamesOnDraw();
     if (!isMutable) {
       this.setDragListeners();
@@ -158,8 +155,6 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   }
 
   private _updatePositions() {
-    this._offsetLeft = this.node.offsetLeft;
-    this._offsetTop = this.node.offsetTop;
     this._offsetWidth = this.node.offsetWidth;
     this._offsetHeight = this.node.offsetHeight;
     this._arePositionsOutdated = false;
@@ -197,29 +192,6 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     };
     view.setCoordinateSystemValid(false);
     view.drawGraph();
-  }
-
-  protected adjustPointerPositioning(): void {
-    const view = this.dagController.getView();
-    const impl = view.impl;
-    // dagitty uses offsetLeft and offsetTop to calculate mouse position,
-    // which is only correct if the container is a direct descendant of body
-    // (or nested in elements which do not have paddings/border/position)
-    // so here we override position getters to return correct values.
-
-    const offsetX = (e: MouseEvent) => {
-      this._maybeUpdatePositions();
-      return e.offsetX + this._offsetLeft;
-    };
-    const offsetY = (e: MouseEvent) => {
-      this._maybeUpdatePositions();
-      return e.offsetY + this._offsetTop;
-    };
-    view.pointerX = offsetX;
-    view.pointerY = offsetY;
-
-    impl.pointerX = offsetX;
-    impl.pointerY = offsetY;
   }
 
   onUpdateRequest(message: Message): void {
