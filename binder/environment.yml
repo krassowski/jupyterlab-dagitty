@@ -13,9 +13,10 @@ dependencies:
   # runtime dependencies
   - python >=3.10
   - jupyterlab >=4.0.0,<5
+  # labextension build dependencies: postBuild builds from source
+  - nodejs >=22.12   # @rspack/core requires ^20.19.0 || >=22.12.0
+  - wget   # for build_dagitty.sh
   - pip
   - wheel
   - r-irkernel
   - r-dagitty   # for demonstration only
-  - pip:
-    - jupyterlab-dagitty>=0.4.0

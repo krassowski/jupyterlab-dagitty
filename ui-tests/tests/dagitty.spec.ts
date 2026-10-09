@@ -7,12 +7,8 @@ const DAG_SOURCE = `dag {
 }`;
 
 /**
- * Render `source` as a notebook cell output with a fixed pixel height, so
- * the widget's screenshots do not depend on how long the cell took to lay
- * out. Width is left for JupyterLab to size: requesting an explicit width
- * here is unreliable (it can end up considerably wider than asked, likely
- * tied to the notebook's windowed-rendering layout timing), so tests below
- * do not depend on an exact width.
+ * Render `source` as a notebook output at a fixed height. Width is left
+ * alone: requesting one explicitly here is unreliable.
  */
 const renderInNotebook = async (
   page: IJupyterLabPageFixture,
@@ -59,10 +55,8 @@ test('submits the rename dialog on Enter in a mutable notebook output', async ({
   page,
   tmpPath
 }) => {
-  // The rename dialog is a plain HTML <form>; JupyterLab's own notebook
-  // keydown handling otherwise swallows Enter before the browser submits it
-  // (see the comment on `_evtKeyDown` in src/index.ts), so this only
-  // exercises the path when dagitty is mutable and runs as a cell output.
+  // Enter in the rename form is otherwise swallowed by JupyterLab's
+  // notebook keydown handling; see `_evtKeyDown` in src/index.ts.
   const view = await renderInNotebook(page, DAG_SOURCE, { mutable: true });
 
   await view.locator('text.nodelabel', { hasText: 'exposure' }).click();
@@ -101,18 +95,9 @@ test('draws each node type with its own decoration', async ({ page }) => {
 test('fitNames widens the drawing to make room for a long node name', async ({
   page
 }) => {
-  // `fitNamesOnDraw` (src/index.ts) measures each node's name with a
-  // throwaway <canvas> context, set to the font of an existing
-  // `svg text.nodelabel` element, falling back to the widget's own font
-  // when none exists yet: `context.font = getComputedStyle(text ?? node).font`.
-  // On every draw this test has observed, that element does not exist yet
-  // at measurement time, so the fallback always applies. The widget's own
-  // font (JupyterLab's DejaVu Sans / Noto Sans SC) measures narrower than
-  // the font dagitty actually draws the label in (Arial, set on the <svg>
-  // itself), so the computed margin is too small and this snapshot
-  // currently shows the long name running past the drawing's right edge.
-  // Pinned here as the known, current behaviour; a future font-matching fix
-  // should update this snapshot to show the full name instead.
+  // fitNamesOnDraw (src/index.ts) measures names in the widget's own font
+  // (DejaVu Sans), not the Arial dagitty draws them in, so the margin runs
+  // short. Pinned as current behaviour: the name below is clipped.
   const longName =
     'a rather long variable name that would be clipped without fitNames';
   const source = `dag {
@@ -144,11 +129,8 @@ test('zooms in on Ctrl+wheel', async ({ page }) => {
 });
 
 test('dragging a vertex tracks the pointer', async ({ page }) => {
-  // Dagitty positions the drag from the native MouseEvent.offsetX/offsetY
-  // (jtextor/dagitty#64, pulled in via build_dagitty.sh), which is only
-  // correct once the container is accounted for the way that commit does
-  // it: this is the one interaction that commit was written for, so check
-  // it directly rather than trust the upstream fix blindly.
+  // Covers jtextor/dagitty#64 (offsetX/offsetY), the fix build_dagitty.sh
+  // pins frontdoor for.
   const source = `dag {
 "a" [pos="0,0"]
 "b" [pos="1,1"]
@@ -175,8 +157,7 @@ test('dragging a vertex tracks the pointer', async ({ page }) => {
   await page.mouse.up();
 
   const after = await nodeCenter('a');
-  // A loose tolerance: this checks the node follows the pointer by roughly
-  // the dragged distance, not that the drag is pixel-exact.
+  // Loose tolerance: following the pointer roughly, not pixel-exact.
   expect(after.x - before.x).toBeGreaterThan(dx * 0.5);
   expect(after.y - before.y).toBeGreaterThan(dy * 0.5);
 });

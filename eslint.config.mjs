@@ -58,22 +58,19 @@ export default defineConfig([
       eqeqeq: 'error',
       'prefer-arrow-callback': 'error',
 
-      // This extension's `extension` object is an `IRenderMime.IExtension`,
-      // not a `JupyterFrontEndPlugin`: it has no `activate`, `requires` or
-      // `optional`, so these two never have anything to check.
+      // This mimerenderer has no activate/requires, commands, tokens,
+      // settings schema, server extension or i18n for these to check.
       'jupyter/plugin-activation-args': 'off',
       'jupyter/plugin-description': 'off',
-      // No commands, settings schema, DI tokens or server extension here.
       'jupyter/command-described-by': 'off',
       'jupyter/token-format': 'off',
       'jupyter/no-pageconfig-base-url': 'off',
-      // No `ITranslator`/`trans` usage; the extension is not translated.
       'jupyter/no-translation-concatenation': 'off',
       'jupyter/no-dynamic-translation': 'off',
       'jupyter/no-untranslated-string': 'off',
       'jupyter/incorrect-translator-usage': 'off',
-      // Its "is this a plugin module" check looks for `activate`, which a
-      // mimerenderer entry never has, so it can never see `_dagitty`'s import.
+      // Its "is this a plugin module" check requires `activate`, which this
+      // never has, so it can't see the `_dagitty` import either.
       'jupyter/prefer-lazy-imports': 'off'
     }
   },
