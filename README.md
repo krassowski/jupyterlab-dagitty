@@ -7,7 +7,7 @@
 A JupyterLab extension for rendering [dagitty](http://dagitty.net/) DAG files (`.dag` or `.dagitty`),
 [Python](https://mybinder.org/v2/gh/krassowski/jupyterlab-dagitty/main?urlpath=lab/tree/examples/Python_demo.ipynb) and
 [R](https://mybinder.org/v2/gh/krassowski/jupyterlab-dagitty/main?urlpath=lab/tree/examples/R_demo.ipynb)
-notebooks. This extension will also work with upcoming Jupyter Notebook v7+.
+notebooks. This extension also works with Jupyter Notebook v7 or newer.
 
 ![Screenshot of rendered DAG][screenshot]
 
