@@ -28,6 +28,10 @@ const MIME_TYPE = 'application/x.dagitty.dag';
  */
 const CLASS_NAME = 'mimerenderer-dagitty-dag';
 
+
+const SVG_MIME = 'image/svg+xml';
+
+
 /**
  * The events of the widget's node that `OutputWidget.handleEvent` handles.
  */
@@ -93,6 +97,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   private _offsetWidth: number;
   private _offsetHeight: number;
   private _inDrag: boolean;
+  private _lastModel: IRenderMime.IMimeModel | undefined;
 
   /**
    * Construct a new output widget.
@@ -119,6 +124,10 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
    * Render Dagitty DAG into this widget's node.
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    if (this._lastModel) {
+      return;
+    }
+    this._lastModel = model;
     const data = model.data[this._mimeType] as string;
     const metadata = model.metadata as any;
     for (const argument of ['width', 'height']) {
@@ -150,7 +159,37 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
       this.setDragListeners();
     }
 
+    this._createSvgFallback();
+
     return Promise.resolve();
+  }
+
+  private _createSvgFallback() {
+    const model = this._lastModel;
+    if (!model) {
+      return;
+    }
+
+    const svg = this.node.querySelector('svg');
+    //svg.setAttribute('width', model.metadata['width'] ? model.metadata['width'] + '' : '700px');
+    //svg.setAttribute('height', model.metadata['height'] ? model.metadata['height'] + '' : '400px');
+    /*
+    document.body.appendChild(svg);
+    this.dagController.getView().drawGraph();
+    this.dagController.getView().resize();
+    this.node.appendChild(svg);
+    */
+
+    if (model.data[SVG_MIME] === svg.outerHTML) {
+      return
+    }
+
+    if (svg) {
+      model.setData({
+        data: { ...model.data, [SVG_MIME]: svg.outerHTML },
+        metadata: model.metadata
+      })
+    }
   }
 
   private _maybeUpdatePositions() {
@@ -201,6 +240,7 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
 
   onUpdateRequest(message: Message): void {
     this._arePositionsOutdated = true;
+    this._createSvgFallback()
   }
 
   /**
@@ -420,7 +460,7 @@ export const rendererFactory: IRenderMime.IRendererFactory = {
 const extension: IRenderMime.IExtension = {
   id: 'jupyterlab-dagitty:plugin',
   rendererFactory,
-  rank: 100,
+  rank: 50,
   dataType: 'string',
   fileTypes: [
     {
